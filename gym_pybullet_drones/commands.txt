@@ -1,0 +1,8 @@
+Run the training
+vglrun -d /dev/dri/card0 python experiments/SVS_Code/ReachThePoint.py
+
+Run the simulation
+vglrun -d /dev/dri/card0 python experiments/SVS_Code/ReachThePoint.py --gui 1 --exp ./experiments/SVS_Code/results/save-ReachThePointAviary-4-cc-kin-pid-11.15.2022_16.20.52/
+
+L'ultimo argomento ./experiments/SVS_Code/results/save-ReachThePointAviary-4-cc-kin-pid-11.15.2022_16.20.52/ indica quale modello trainato utilizzare.
+
