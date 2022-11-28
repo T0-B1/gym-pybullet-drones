@@ -491,7 +491,7 @@ class ReachThePointAviarySingle(BaseMultiagentAviary):
         #print("Sorted by X")
         #print(nearest10distances)
         for nearestSphereIndex in range(0, len(nearest10distances)):
-            if nearest10distances[nearestSphereIndex][0] <= 10:
+            if nearest10distances[nearestSphereIndex][4] <= 10:
                 if nearest10distances[nearestSphereIndex][0] < 0:
                     #sfera dietro
                     deltaX = -1
