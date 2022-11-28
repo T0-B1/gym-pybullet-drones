@@ -65,7 +65,8 @@ class BaseMultiagentAviary(BaseAviary, MultiAgentEnv):
             The type of action space (1 or 3D; RPMS, thurst and torques, waypoint or velocity with PID control; etc.)
 
         """
-        if num_drones < 2:
+        if num_drones < 1: #2: #serafini: commentato il due per test multiagent single
+        
             print("[ERROR] in BaseMultiagentAviary.__init__(), num_drones should be >= 2")
             exit()
         if act == ActionType.TUN:
@@ -275,6 +276,7 @@ class BaseMultiagentAviary(BaseAviary, MultiAgentEnv):
         Returns
         -------
         dict[int, ndarray]
+
             A Dict with NUM_DRONES entries indexed by Id in integer format,
             each a Box() os shape (H,W,4) or (12,) depending on the observation type.
 
@@ -298,6 +300,15 @@ class BaseMultiagentAviary(BaseAviary, MultiAgentEnv):
                                               dtype=np.float32
                                               ) for i in range(self.NUM_DRONES)})
             ############################################################
+        elif self.OBS_TYPE == ObservationType.AAA:
+            ### OBS WITH SPHERES OF SIZE 42
+            #### Observation vector ### X Y Z R P Y VX VY VZ WX WY WZ - dxs dys dzs (x10)
+            #ripristinare min x == -1 se cambi la normalizzazione
+            dict = spaces.Dict({i: spaces.Box(low=np.array([0,-1,0, -1,-1,-1, -1,-1,-1, -1,-1,-1,  -1,-1,-1, -1,-1,-1, -1,-1,-1, -1,-1,-1, -1,-1,-1, -1,-1,-1, -1,-1,-1, -1,-1,-1, -1,-1,-1, -1,-1,-1]),
+                                              high=np.array([1,1,1, 1,1,1, 1,1,1, 1,1,1,            1,1,1, 1,1,1, 1,1,1, 1,1,1, 1,1,1, 1,1,1, 1,1,1, 1,1,1, 1,1,1, 1,1,1]),
+                                              dtype=np.float32
+                                              ) for i in range(self.NUM_DRONES)})
+            return dict
         else:
             print("[ERROR] in BaseMultiagentAviary._observationSpace()")
     
@@ -338,6 +349,15 @@ class BaseMultiagentAviary(BaseAviary, MultiAgentEnv):
                 obs = self._clipAndNormalizeState(self._getDroneStateVector(i))
                 obs_12[i, :] = np.hstack([obs[0:3], obs[7:10], obs[10:13], obs[13:16]]).reshape(12,)
             return {i: obs_12[i, :] for i in range(self.NUM_DRONES)}
+            ############################################################
+        elif self.OBS_TYPE == ObservationType.AAA: 
+            #### OBS SPACE OF SIZE 42
+            obs_42 = np.zeros((self.NUM_DRONES,42))
+            for i in range(self.NUM_DRONES):
+                obs = self._clipAndNormalizeState(self._getDroneStateVector(i))
+                obsSpher = self._clipAndNormalizeSphere() # ndarray dimensione 30 , tre distanze per ogni sfera
+                obs_42[i, :] = np.hstack([obs[0:3], obs[7:10], obs[10:13], obs[13:16], obsSpher[0:31]]).reshape(42,)
+            return {i: obs_42[i, :] for i in range(self.NUM_DRONES)}
             ############################################################
         else:
             print("[ERROR] in BaseMultiagentAviary._computeObs()")
