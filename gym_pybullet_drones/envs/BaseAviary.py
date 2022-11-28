@@ -271,6 +271,13 @@ class BaseAviary(gym.Env):
             in each subclass for its format.
 
         """
+
+        #added code for camera in evaluation
+        cameraTargetPosition = self._getDroneStateVector(0)
+        cameraTargetPosition = cameraTargetPosition[0:3]
+        p.resetDebugVisualizerCamera(cameraDistance=0.4, cameraYaw=-90, cameraPitch=-20, cameraTargetPosition=cameraTargetPosition, physicsClientId=self.CLIENT )
+
+
         #### Save PNG video frames if RECORD=True and GUI=False ####
         if self.RECORD and not self.GUI and self.step_counter%self.CAPTURE_FREQ == 0:
             [w, h, rgb, dep, seg] = p.getCameraImage(width=self.VID_WIDTH,
