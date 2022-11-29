@@ -1,0 +1,54 @@
+Run the training
+vglrun -d /dev/dri/card0 python experiments/SVS_Code/ReachThePoint.py
+
+Run the simulation
+vglrun -d /dev/dri/card0 python experiments/SVS_Code/ReachThePoint.py --gui 1 --exp ./experiments/SVS_Code/results/save-ReachThePointAviary-4-cc-kin-pid-11.15.2022_16.20.52/
+
+L'ultimo argomento ./experiments/SVS_Code/results/save-ReachThePointAviary-4-cc-kin-pid-11.15.2022_16.20.52/ indica quale modello trainato utilizzare.
+
+----------------
+andreaS
+
+
+
+conda activate drones
+
+vglrun -d /dev/dri/card1 python experiments/SVS_Code/test_simpler_env/ReachThePointSingle.py
+
+tensorboard --logdir=./experiments/SVS_Code/test_simpler_env/results/save-ReachThePointAviarySingle-1-cc-aaa-pid-11.28.2022_
+
+vglrun -d /dev/dri/card0 python experiments/SVS_Code/test_simpler_env/ReachThePointSingle.py --gui 1 --exp ./experiments/SVS_Code/test_simpler_env/results/save-ReachThePointAviarySingle-1-cc-aaa-pid-11.28.2022_
+
+
+---E-4, RISISTEMARE LA NORMALIZZAZIONE DI X!!
+primi 3 4milioni-2a60-media240stop 
+	(1.31.29 non bello)
+	(1.33.54 non bello) 
+	1.32.35 sfora a +30
+1 6milioni-no60-nostop 01.36.27 a volte stupido, ma ha apparentemente più senso degli altri ++
+1 2milioni-no60-nostop 01.38.21 per ora il migliore, 30 metri e sfora in alto
+1 3milioni-no60-nostop 01.38.47 niente di eccezionale
+1 4milioni-no60-nostop 01.39.04 niente di eccezionale
+
+----
+e-5
+
+6m 10.16.31 mandato per sbaglio a 600.000 brutto
+3m 10.15.28 per schivare si butta per terra
+2.4m KILLATA
+3m 10.15.11 va a destra
+-----
+reward neg peggiori 
+
+2m  10.20.04 nope
+2.4m --KILLATE SORRY
+3m --KILLATE SORRY
+
+----- ritorno a e-4 che sembrava meglio
+100.000 con normalizzazione x su 0,1 -14.31.19 -14.44.59
+
+provo stessa config ma più step
+
+3m 14.59.32 fallimentare
+4m 15.00.01 fallimentare
+5m 15.00.14 buono

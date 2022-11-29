@@ -248,13 +248,24 @@ if __name__ == "__main__":
         "custom_model": "cc_model",
     }
 
+    def mapping(x):
+        if x == 0:
+            return "pol0"
+        elif x == 1:
+            return "pol1"
+        elif x == 2:
+            return "pol2"
+        else:
+            return "pol3"
     #### Set up the multiagent params of the trainer's config ##
     config["multiagent"] = {
         "policies": {
             "pol0": (None, observer_space, action_space, {"agent_id": 0, }),
             "pol1": (None, observer_space, action_space, {"agent_id": 1, }),
+            "pol2": (None, observer_space, action_space, {"agent_id": 2, }),
+            "pol3": (None, observer_space, action_space, {"agent_id": 3, }),
         },
-        "policy_mapping_fn": lambda x: "pol0" if x == 0 else "pol1",  # # Function mapping agent ids to policy ids
+        "policy_mapping_fn": mapping, #lambda x: "pol0" if x == 0 else "pol1",  # # Function mapping agent ids to policy ids
         "observation_fn": central_critic_observer,  # See rllib/evaluation/observation_function.py for more info
     }
 
@@ -271,6 +282,12 @@ if __name__ == "__main__":
     policy1 = agent.get_policy("pol1")
     print("action model 1", policy1.model.action_model)
     print("value model 1", policy1.model.value_model)
+    policy2 = agent.get_policy("pol2")
+    print("action model 2", policy2.model.action_model)
+    print("value model 2", policy2.model.value_model)
+    policy3 = agent.get_policy("pol3")
+    print("action model 3", policy3.model.action_model)
+    print("value model 3", policy3.model.value_model)
 
     #### Create test environment ###############################
     if ARGS.exp.split("-")[1] == 'flock':

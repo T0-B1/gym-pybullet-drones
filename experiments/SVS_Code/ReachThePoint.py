@@ -66,7 +66,7 @@ if __name__ == "__main__":
 
     #### Define and parse (optional) arguments for the script ##
     parser = argparse.ArgumentParser(description='Multi-agent reinforcement learning experiments script')
-    parser.add_argument('--num_drones', default=2, type=int, help='Number of drones (default: 2)', metavar='')
+    parser.add_argument('--num_drones', default=4, type=int, help='Number of drones (default: 4)', metavar='')
     parser.add_argument('--env', default='ReachThePointAviary', type=str, choices=['ReachThePointAviary'],
                         help='Task (default: leaderfollower)', metavar='')
     parser.add_argument('--obs', default='kin', type=ObservationType, help='Observation space (default: kin)',
@@ -92,12 +92,6 @@ if __name__ == "__main__":
         "%m.%d.%Y_%H.%M.%S")
     if not os.path.exists(filename):
         os.makedirs(filename + '/')
-
-    #### Print out current git commit hash #####################
-    if platform == "linux" or platform == "darwin":
-        git_commit = subprocess.check_output(["git", "describe", "--tags"]).strip()
-        with open(filename + '/git_commit.txt', 'w+') as f:
-            f.write(str(git_commit))
 
     #### Constants, and errors #################################
     if ARGS.obs == ObservationType.KIN:
@@ -129,12 +123,23 @@ if __name__ == "__main__":
     env_callable, obs_space, act_space, temp_env = build_env_by_name(env_class=from_env_name_to_class(ARGS.env),
                                                                      num_drones=ARGS.num_drones,
                                                                      aggregate_phy_steps=shared_constants.AGGR_PHY_STEPS,
+                                                                     initial_xyzs=np.array([ [.0, .0, .5], [.0, 1, .5], [.0, 2, .5], [.0, 3, .5] ]),
                                                                      obs=ARGS.obs,
                                                                      act=ARGS.act,
                                                                      gui=ARGS.gui
                                                                      )
     #### Register the environment ##############################
     register_env(ARGS.env, env_callable)
+
+    def mapping(x):
+        if x == 0:
+            return "pol0"
+        elif x == 1:
+            return "pol1"
+        elif x == 2:
+            return "pol2"
+        else:
+            return "pol3"
 
     config = {
         "env": ARGS.env,
@@ -150,13 +155,16 @@ if __name__ == "__main__":
             "policies": {
                 "pol0": (None, obs_space[0], act_space[0], {"agent_id": 0, }),
                 "pol1": (None, obs_space[1], act_space[1], {"agent_id": 1, }),
+                "pol2": (None, obs_space[2], act_space[2], {"agent_id": 2, }),
+                "pol3": (None, obs_space[3], act_space[3], {"agent_id": 3, }),
             },
-            "policy_mapping_fn": lambda x: "pol0" if x == 0 else "pol1",
+            "policy_mapping_fn": mapping, #lambda x: "pol0" if x == 0 else "pol1",
             # Always use "shared" policy.
         }
     }
+    #settarestep passi step instagirl influencer
     stop = {
-        "timesteps_total": 10000,  # 100000 ~= 10'
+        "timesteps_total": 300000,  # 100000 ~= 10'
         # "episode_reward_mean": 0,
         # "training_iteration": 100,
     }
@@ -203,6 +211,8 @@ if __name__ == "__main__":
         #### Extract and print policies ############################
         policy0 = agent.get_policy("pol0")
         policy1 = agent.get_policy("pol1")
+        policy2 = agent.get_policy("pol2")
+        policy3 = agent.get_policy("pol3")
 
         #### Show, record a video, and log the model's performance #
         obs = temp_env.reset()
@@ -219,13 +229,15 @@ if __name__ == "__main__":
             print("[ERROR] unknown ActionType")
             exit()
         start = time.time()
-        for i in range(6 * int(temp_env.SIM_FREQ / temp_env.AGGR_PHY_STEPS)):  # Up to 6''
+        for i in range(60 * int(temp_env.SIM_FREQ / temp_env.AGGR_PHY_STEPS)):  # Up to 6''
             #### Deploy the policies ###################################
             temp = {}
             temp[0] = policy0.compute_single_action(
                 np.hstack(obs[0]))  # Counterintuitive order, check params.json
             temp[1] = policy1.compute_single_action(np.hstack(obs[1]))
-            action = {0: temp[0][0], 1: temp[1][0]}
+            temp[2] = policy2.compute_single_action(np.hstack(obs[2]))
+            temp[3] = policy3.compute_single_action(np.hstack(obs[3]))
+            action = {0: temp[0][0], 1: temp[1][0], 2: temp[2][0], 3: temp[3][0]}
             obs, reward, done, info = temp_env.step(action)
             temp_env.render()
             if OBS == ObservationType.KIN:
