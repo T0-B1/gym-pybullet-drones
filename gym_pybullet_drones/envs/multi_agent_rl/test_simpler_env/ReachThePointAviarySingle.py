@@ -318,8 +318,8 @@ class ReachThePointAviarySingle(BaseMultiagentAviary):
                     y = p.getContactPoints(self.PLANE_ID, self.DRONE_IDS[0])
                     if y != ():
                             done[i] = True
-                    for i in range (len(SPHERE_IDS)):
-                        x = p.getContactPoints(SPHERE_IDS[i], self.DRONE_IDS[0])
+                    for j in range (len(SPHERE_IDS)):
+                        x = p.getContactPoints(SPHERE_IDS[j], self.DRONE_IDS[0])
                         if x != ():
                             done[i] = True
             done["__all__"] = all(done.values())
