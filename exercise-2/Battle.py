@@ -137,7 +137,10 @@ if __name__ == "__main__":
         "num_gpus": torch.cuda.device_count(),
         "batch_mode": "complete_episodes",
         "framework": "torch",
-        # "lr": 5e-3,
+        "entropy_coeff": tune.loguniform(0.00000001, 0.1),
+        "lr": tune.loguniform (5e-5, 1),
+        "sgd_minibatch_size": tune.choice ([ 32, 64, 128, 256, 512]),
+        "lambda": tune.choice ([0.1,0.3, 0.5, 0.7,0.9,1.0]),
         "multiagent": {
             # We only have one policy (calling it "shared").
             # Class, obs/act-spaces, and config will be derived
