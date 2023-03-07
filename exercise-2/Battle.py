@@ -37,14 +37,14 @@ if __name__ == "__main__":
 
     #### Define and parse (optional) arguments for the script ##
     parser = argparse.ArgumentParser(description='Multi-agent reinforcement learning experiments script')
-    parser.add_argument('--num_drones', default=2, type=int, help='Number of drones (default: 2)', metavar='')
+    parser.add_argument('--num_drones', default=8, type=int, help='Number of drones (default: 2)', metavar='')
     parser.add_argument('--obs', default='kin', type=ObservationType, help='Observation space (default: kin)',
                         metavar='')
-    parser.add_argument('--act', default='vel', type=ActionType, help='Action space (default: one_d_rpm)',
+    parser.add_argument('--act', default='vel', type=ActionType, help='Action space (default: vel)',
                         metavar='')
     parser.add_argument('--algo', default='cc', type=str, choices=['cc'], help='MARL approach (default: cc)',
                         metavar='')
-    parser.add_argument('--workers', default=1, type=int, help='Number of RLlib workers (default: 0)', metavar='')
+    parser.add_argument('--workers', default=1, type=int, help='Number of RLlib workers (default: 1)', metavar='')
     parser.add_argument('--debug', default=False, type=str2bool,
                         help='Run in one Thread if true, for debugger to work properly', metavar='')
     parser.add_argument('--gui', default=False, type=str2bool,
@@ -83,17 +83,21 @@ if __name__ == "__main__":
         exit(4)
 
     if ARGS.num_drones % 2 == 0 and ARGS.num_drones >= 2:
-        RED_TEAM_INIT_XYZS = np.array(
-            [[-0.5 + (0.5 * i), 5, 2] for i in range(int(ARGS.num_drones / 2))])
-        BLUE_TEAM_INIT_XYZS = np.array(
-            [[-0.5 + (0.5 * i), -5, 2] for i in range(int(ARGS.num_drones / 2))])
-        INIT_XYZS = np.concatenate((RED_TEAM_INIT_XYZS, BLUE_TEAM_INIT_XYZS))
 
-        RED_TEAM_INIT_RPYS = np.array([[0, 0, -1.41372] for i in range(int(ARGS.num_drones / 2))])
+        INIT_XYZS = np.array([[0.0,0.0,0.0]]*ARGS.num_drones)
+        for i in range(ARGS.num_drones):
+            if i%2 == 0:
+                INIT_XYZS[i] = [0.5 * (i/2), 5, 2]
+            else:
+                INIT_XYZS[i] = [0.5 * ((i-1)/2), -5, 2]
 
-        BLUE_TEAM_INIT_RPYS = np.array([[0, 0, 1.41372] for i in range(int(ARGS.num_drones / 2))])
+        INIT_RPYS = np.array([[0.0,0.0,0.0]]*ARGS.num_drones)
+        for i in range(ARGS.num_drones):
+            if i%2 == 0:
+                INIT_RPYS[i] = [0, 0, -1.41372]
+            else:
+                INIT_RPYS[i] = [0, 0, 1.41372]
 
-        INIT_RPYS = np.concatenate((RED_TEAM_INIT_RPYS, BLUE_TEAM_INIT_RPYS))
     else:
         logging.exception("The number of drones must be even and grater than2")
         exit(-1)
@@ -142,10 +146,11 @@ if __name__ == "__main__":
                 "pol0": (None, obs_space[0], act_space[0], {"agent_id": 0, }),
                 "pol1": (None, obs_space[1], act_space[1], {"agent_id": 1, }),
             },
-            "policy_mapping_fn": lambda x: "pol0" if x == 0 else "pol1",
+            "policy_mapping_fn": lambda x: "pol" + str(x%2),
             # Always use "shared" policy.
         }
     }
+
     stop = {
         "timesteps_total": 20000,  # 100000 ~= 10'
         # "episode_reward_mean": 0,
@@ -191,7 +196,12 @@ if __name__ == "__main__":
             # print(checkpoints)
 
     else:
-        OBS = ObservationType.KIN if ARGS.exp.split("-")[4] == 'kin' else ObservationType.RGB
+        
+        if (ARGS.exp.split("-")[4] == 'kin'):
+            OBS = ObservationType.KIN 
+        else:  
+            OBS = ObservationType.RGB
+
         action_name = ARGS.exp.split("-")[5]
         NUM_DRONES = int(ARGS.exp.split("-")[2])
         ACT = [action for action in ActionType if action.value == action_name][0]
@@ -205,7 +215,7 @@ if __name__ == "__main__":
         #### Extract and print policies ############################
         policy0 = agent.get_policy("pol0")
         policy1 = agent.get_policy("pol1")
-
+        
         #### Show, record a video, and log the model's performance #
         obs = temp_env.reset()
         logger = Logger(logging_freq_hz=int(temp_env.SIM_FREQ / temp_env.AGGR_PHY_STEPS),
@@ -227,7 +237,18 @@ if __name__ == "__main__":
             temp[0] = policy0.compute_single_action(
                 np.hstack(obs[0]))  # Counterintuitive order, check params.json
             temp[1] = policy1.compute_single_action(np.hstack(obs[1]))
-            action = {0: temp[0][0], 1: temp[1][0]}
+            if NUM_DRONES == 8:
+                temp[2] = policy0.compute_single_action(np.hstack(obs[2]))
+                temp[3] = policy1.compute_single_action(np.hstack(obs[3]))
+                temp[4] = policy0.compute_single_action(np.hstack(obs[4]))
+                temp[5] = policy1.compute_single_action(np.hstack(obs[5]))
+                temp[6] = policy0.compute_single_action(np.hstack(obs[6]))
+                temp[7] = policy1.compute_single_action(np.hstack(obs[7]))
+
+            if NUM_DRONES == 8:
+                action = {0: temp[0][0], 1: temp[1][0], 2: temp[2][0], 3: temp[3][0], 4: temp[4][0], 5: temp[5][0], 6: temp[6][0], 7: temp[7][0]}
+            elif NUM_DRONES == 2:
+                action = {0: temp[0][0], 1: temp[1][0]}
             obs, reward, done, info = temp_env.step(action)
             temp_env.render()
             if OBS == ObservationType.KIN:
